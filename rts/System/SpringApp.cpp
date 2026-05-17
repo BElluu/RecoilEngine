@@ -729,7 +729,10 @@ void SpringApp::Startup()
 		pregame = new CPreGame(clientSetup);
 		return;
 	}
-	if (extension == "sdfz") {
+	std::string demoExt = configHandler->GetString("DemoFileExtension");
+	if (demoExt.empty() || demoExt.find_first_of("/\\.") != std::string::npos)
+		demoExt = "sdfz";
+	if (extension == demoExt) {
 		LoadDemoFile(inputFile);
 		return;
 	}

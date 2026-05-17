@@ -11,12 +11,15 @@
 #include "Sim/Misc/TeamStatistics.h"
 #include "System/TimeUtil.h"
 #include "System/StringUtil.h"
+#include "System/Config/ConfigHandler.h"
 #include "System/FileSystem/DataDirsAccess.h"
 #include "System/FileSystem/FileSystem.h"
 #include "System/FileSystem/FileQueryFlags.h"
 #include "System/FileSystem/FileHandler.h"
 #include "System/Log/ILog.h"
 #include "System/Threading/ThreadPool.h"
+
+CONFIG(std::string, DemoFileExtension).defaultValue("sdfz").description("File extension for replay/demo files. Set by the lobby to enable game-specific OS file associations (e.g. 'barreplay' for BAR).");
 
 #ifdef CreateDirectory
 #undef CreateDirectory
@@ -160,12 +163,16 @@ void CDemoRecorder::SetName(const std::string& mapName, const std::string& modNa
 	// oss << FileSystem::GetBasename(modName);
 	// oss << "_";
 	oss << engineVersionName;
-	buf << oss.str() << ".sdfz";
+	std::string demoExt = configHandler->GetString("DemoFileExtension");
+	if (demoExt.empty() || demoExt.find_first_of("/\\.") != std::string::npos)
+		demoExt = "sdfz";
+	const std::string ext = "." + demoExt;
+	buf << oss.str() << ext;
 
 	int n = 0;
 	while (FileSystem::FileExists(buf.str()) && (n < 99)) {
 		buf.str(""); // clears content
-		buf << oss.str() << "_" << n++ << ".sdfz";
+		buf << oss.str() << "_" << n++ << ext;
 	}
 
 	demoName = buf.str();
