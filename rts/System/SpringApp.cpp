@@ -97,6 +97,7 @@
 #include "System/Sound/ISound.h"
 #include "System/Sync/FPUCheck.h"
 #include "System/Threading/ThreadPool.h"
+#include "System/LoadSave/DemoFileExtension.h"
 
 #include "Game/UnsyncedGameCommands.h"
 #include "Game/SyncedGameCommands.h"
@@ -683,6 +684,14 @@ void SpringApp::LoadSpringMenu()
 	}
 }
 
+static bool IsReplay(const std::string& path)
+{
+	if (IsDemoExtension(FileSystem::GetExtensionLowerCase(path)))
+		return true;
+
+	return ContentsLookLikeAReplay(path);
+}
+
 /**
  * Initializes instance of GameSetup
  */
@@ -729,10 +738,7 @@ void SpringApp::Startup()
 		pregame = new CPreGame(clientSetup);
 		return;
 	}
-	std::string demoExt = configHandler->GetString("DemoFileExtension");
-	if (demoExt.empty() || demoExt.find_first_of("/\\.") != std::string::npos)
-		demoExt = "sdfz";
-	if (extension == demoExt) {
+	if (IsReplay(inputFile)) {
 		LoadDemoFile(inputFile);
 		return;
 	}

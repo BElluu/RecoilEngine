@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "DemoRecorder.h"
+#include "DemoFileExtension.h"
 #include "base64.h"
 #include "Game/GameVersion.h"
 #include "Sim/Misc/TeamStatistics.h"
@@ -19,7 +20,26 @@
 #include "System/Log/ILog.h"
 #include "System/Threading/ThreadPool.h"
 
-CONFIG(std::string, DemoFileExtension).defaultValue("sdfz").description("File extension for replay/demo files. Set by the lobby to enable game-specific OS file associations (e.g. 'barreplay' for BAR).");
+CONFIG(std::string, DemoFileExtension).defaultValue("sdfz").description("Comma-separated list of replay file extensions. The first entry is used when recording; all entries are accepted when loading. Set by the lobby (e.g. 'barreplay,sdfz' for BAR).");
+
+std::vector<std::string> GetDemoFileExtensions()
+{
+	std::vector<std::string> extensions;
+	std::istringstream ss(configHandler->GetString("DemoFileExtension"));
+	std::string token;
+	while (std::getline(ss, token, ',')) {
+		const auto first = token.find_first_not_of(" \t");
+		const auto last  = token.find_last_not_of(" \t");
+		if (first == std::string::npos)
+			continue;
+		token = token.substr(first, last - first + 1);
+		if (!token.empty() && token.find_first_of("/\\.") == std::string::npos)
+			extensions.push_back(token);
+	}
+	if (extensions.empty())
+		extensions.push_back("sdfz");
+	return extensions;
+}
 
 #ifdef CreateDirectory
 #undef CreateDirectory
@@ -163,10 +183,7 @@ void CDemoRecorder::SetName(const std::string& mapName, const std::string& modNa
 	// oss << FileSystem::GetBasename(modName);
 	// oss << "_";
 	oss << engineVersionName;
-	std::string demoExt = configHandler->GetString("DemoFileExtension");
-	if (demoExt.empty() || demoExt.find_first_of("/\\.") != std::string::npos)
-		demoExt = "sdfz";
-	const std::string ext = "." + demoExt;
+	const std::string ext = "." + GetDemoFileExtensions()[0];
 	buf << oss.str() << ext;
 
 	int n = 0;

@@ -1,6 +1,7 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
 #include "SelectionWidget.h"
+#include "System/LoadSave/DemoFileExtension.h"
 
 ///[maint]#ifndef HEADLESS
 #include <functional>
@@ -104,11 +105,10 @@ void SelectionWidget::ShowDemoList(const std::function<void(const std::string&)>
 	const std::string dir = FileSystem::EnsurePathSepAtEnd("demos");
 
 	// FIXME: names overflow the box
-	std::string demoExt = configHandler->GetString("DemoFileExtension");
-	if (demoExt.empty() || demoExt.find_first_of("/\\.") != std::string::npos)
-		demoExt = "sdfz";
-	for (const std::string& demo: dataDirsAccess.FindFiles(cwd + dir, "*." + demoExt, 0)) {
-		curSelect->list->AddItem(demo.substr(demo.find(dir) + 6), "");
+	for (const std::string& demoExt : GetDemoFileExtensions()) {
+		for (const std::string& demo : dataDirsAccess.FindFiles(cwd + dir, "*." + demoExt, 0)) {
+			curSelect->list->AddItem(demo.substr(demo.find(dir) + 6), "");
+		}
 	}
 
 	demoSelectedCB = demoSelectCB;
