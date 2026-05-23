@@ -106,10 +106,12 @@ void SelectionWidget::ShowDemoList(const std::function<void(const std::string&)>
 
 	// FIXME: names overflow the box
 	const auto exts = GetDemoFileExtensions();
-	std::string pattern = "*.{" + exts[0];
-	for (size_t i = 1; i < exts.size(); ++i)
-		pattern += "," + exts[i];
-	pattern += "}";
+	const auto pattern = std::format
+		( "*.{{{}}}"
+		, exts
+			| std::views::join_with(',')
+			| std::ranges::to<std::string>()
+	);
 	for (const std::string& demo : dataDirsAccess.FindFiles(cwd + dir, pattern, 0)) {
 		curSelect->list->AddItem(demo.substr(demo.find(dir) + 6), "");
 	}
