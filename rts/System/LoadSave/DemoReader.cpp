@@ -55,10 +55,8 @@ CDemoReader::CDemoReader(const std::string& filename, float curTime): playbackDe
 {
 	demoName = filename;
 
-#ifndef TOOLS
 	if (!IsDemoExtension(FileSystem::GetExtensionLowerCase(filename)))
 		throw content_error("Unsupported demo extension: " + FileSystem::GetExtensionLowerCase(filename));
-#endif
 
 	// file not found -> exception
 	if (!playbackDemo->FileExists())

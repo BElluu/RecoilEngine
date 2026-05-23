@@ -4,6 +4,7 @@
 #include <cerrno>
 #include <cstring>
 #include <memory>
+#include <ranges>
 
 #include "DemoRecorder.h"
 #include "DemoFileExtension.h"
@@ -24,20 +25,16 @@ CONFIG(std::string, DemoFileExtension).defaultValue("sdfz").description("Comma-s
 
 std::vector<std::string> GetDemoFileExtensions()
 {
-	std::vector<std::string> extensions;
-	std::istringstream ss(configHandler->GetString("DemoFileExtension"));
-	std::string token;
-	while (std::getline(ss, token, ',')) {
-		const auto first = token.find_first_not_of(" \t");
-		const auto last  = token.find_last_not_of(" \t");
-		if (first == std::string::npos)
-			continue;
-		token = token.substr(first, last - first + 1);
-		if (!token.empty() && token.find_first_of("/\\.") == std::string::npos)
-			extensions.push_back(token);
-	}
+	const auto configValue = configHandler->GetString("DemoFileExtension");
+	auto extensions = std::vector<std::string>
+		( std::from_range
+		, configValue
+			| std::views::split(',')
+			| std::views::transform([](const auto& r) { return StringTrim(std::string(r.begin(), r.end())); })
+			| std::views::filter([](const std::string& s) { return !s.empty() && s.find_first_of("/\\.") == std::string::npos; })
+		);
 	if (extensions.empty())
-		extensions.push_back("sdfz");
+		extensions.emplace_back("sdfz");
 	return extensions;
 }
 

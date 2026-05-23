@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include <algorithm>
 #include <cstring>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -15,8 +15,12 @@ std::vector<std::string> GetDemoFileExtensions();
 
 inline bool IsDemoExtension(const std::string& ext)
 {
+#ifdef TOOLS
+	return true;
+#else
 	const auto extensions = GetDemoFileExtensions();
-	return std::find(extensions.begin(), extensions.end(), ext) != extensions.end();
+	return std::ranges::contains(extensions, ext);
+#endif
 }
 
 inline bool ContentsLookLikeAReplay(const std::string& path)
@@ -24,7 +28,7 @@ inline bool ContentsLookLikeAReplay(const std::string& path)
 	gzFile file = gzopen(path.c_str(), "rb");
 	if (file == nullptr)
 		return false;
-	char magic[16] = {};
+	decltype(DemoFileHeader::magic) magic = {};
 	const int bytesRead = gzread(file, magic, sizeof(magic));
 	gzclose(file);
 	return (bytesRead == static_cast<int>(sizeof(magic)) && memcmp(magic, DEMOFILE_MAGIC, sizeof(magic)) == 0);
